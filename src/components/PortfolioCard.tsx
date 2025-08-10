@@ -1,30 +1,54 @@
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery } from "@tanstack/react-query";
+import { TrendingUpIcon, DollarSignIcon, BarChart3Icon } from "lucide-react";
 
-const fetchBitcoinPrices = async () => {
-  const response = await fetch(
-    "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=180&interval=daily"
-  );
-  const data = await response.json();
+// Generate mock portfolio performance data
+const generatePortfolioData = () => {
+  const data = [];
+  const baseValue = 280000;
   
-  // Format data for the chart - take last 6 months
-  return data.prices.slice(-180).map(([timestamp, price]: [number, number]) => ({
-    date: new Date(timestamp).toLocaleDateString('en-US', { month: 'short' }),
-    price: Math.round(price)
-  }));
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    
+    // Generate realistic portfolio fluctuation
+    const randomVariation = (Math.random() - 0.5) * 0.02; // ±2% daily variation
+    const trendFactor = (30 - i) * 0.001; // Slight upward trend
+    const value = baseValue * (1 + trendFactor + randomVariation);
+    
+    data.push({
+      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      value: Math.round(value)
+    });
+  }
+  
+  return data;
+};
+
+const fetchPortfolioPerformance = async () => {
+  // For demo purposes, return mock data
+  // In production, this would calculate your actual portfolio performance
+  await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
+  return generatePortfolioData();
 };
 
 const PortfolioCard = () => {
-  const { data: priceData, isLoading } = useQuery({
-    queryKey: ['bitcoinPrices'],
-    queryFn: fetchBitcoinPrices,
-    refetchInterval: 60000, // Refetch every minute
+  const { data: portfolioData, isLoading } = useQuery({
+    queryKey: ['portfolioPerformance'],
+    queryFn: fetchPortfolioPerformance,
+    refetchInterval: 300000, // Refetch every 5 minutes
   });
+
+  // Calculate portfolio stats
+  const currentValue = portfolioData?.[portfolioData.length - 1]?.value || 287500;
+  const previousValue = portfolioData?.[portfolioData.length - 2]?.value || 285000;
+  const dailyChange = currentValue - previousValue;
+  const dailyChangePercent = (dailyChange / previousValue) * 100;
 
   if (isLoading) {
     return (
       <div className="glass-card p-6 rounded-lg mb-8 animate-fade-in">
-        <h2 className="text-xl font-semibold mb-6">Bitcoin Performance</h2>
+        <h2 className="text-xl font-semibold mb-6">Portfolio Performance</h2>
         <div className="w-full h-[200px] flex items-center justify-center">
           <span className="text-muted-foreground">Loading...</span>
         </div>
@@ -34,19 +58,52 @@ const PortfolioCard = () => {
 
   return (
     <div className="glass-card p-6 rounded-lg mb-8 animate-fade-in">
-      <h2 className="text-xl font-semibold mb-6">Bitcoin Performance</h2>
-      <div className="w-full h-[200px]">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold">Portfolio Performance</h2>
+        <div className="flex items-center gap-2">
+          <TrendingUpIcon className="w-4 h-4 text-success" />
+          <span className="text-sm text-success">30D</span>
+        </div>
+      </div>
+      
+      {/* Portfolio Summary */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-secondary/20 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <DollarSignIcon className="w-3 h-3 text-primary" />
+            <span className="text-xs text-muted-foreground">Total Value</span>
+          </div>
+          <p className="text-lg font-semibold">${currentValue.toLocaleString()}</p>
+        </div>
+        <div className="bg-secondary/20 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart3Icon className="w-3 h-3 text-success" />
+            <span className="text-xs text-muted-foreground">Daily P&L</span>
+          </div>
+          <p className={`text-lg font-semibold ${dailyChange >= 0 ? 'text-success' : 'text-warning'}`}>
+            {dailyChange >= 0 ? '+' : ''}${dailyChange.toFixed(0)}
+          </p>
+          <span className={`text-xs ${dailyChange >= 0 ? 'text-success' : 'text-warning'}`}>
+            ({dailyChangePercent >= 0 ? '+' : ''}{dailyChangePercent.toFixed(2)}%)
+          </span>
+        </div>
+      </div>
+
+      {/* Performance Chart */}
+      <div className="w-full h-[160px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={priceData}>
+          <LineChart data={portfolioData}>
             <XAxis 
               dataKey="date" 
               stroke="#E6E4DD"
-              fontSize={12}
+              fontSize={10}
+              interval="preserveStartEnd"
             />
             <YAxis 
               stroke="#E6E4DD"
-              fontSize={12}
-              tickFormatter={(value) => `$${value}`}
+              fontSize={10}
+              domain={['dataMin - 1000', 'dataMax + 1000']}
+              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
             />
             <Tooltip 
               contentStyle={{ 
@@ -56,13 +113,15 @@ const PortfolioCard = () => {
               }}
               labelStyle={{ color: '#E6E4DD' }}
               itemStyle={{ color: '#8989DE' }}
+              formatter={(value: number) => [`$${value.toLocaleString()}`, 'Portfolio Value']}
             />
             <Line 
               type="monotone" 
-              dataKey="price" 
+              dataKey="value" 
               stroke="#8989DE" 
               strokeWidth={2}
               dot={false}
+              strokeDasharray="0"
             />
           </LineChart>
         </ResponsiveContainer>
