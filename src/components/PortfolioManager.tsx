@@ -3,12 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, GripVertical } from "lucide-react";
+import { Plus, X, GripVertical, Edit } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import StockSearch from "./StockSearch";
 
 export interface Stock {
   symbol: string;
   name: string;
+  shares?: number;
+  averagePrice?: number;
 }
 
 interface PortfolioManagerProps {
@@ -18,18 +21,43 @@ interface PortfolioManagerProps {
 
 const PortfolioManager = ({ stocks, onUpdateStocks }: PortfolioManagerProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [newSymbol, setNewSymbol] = useState("");
-  const [newName, setNewName] = useState("");
+  const [editingStock, setEditingStock] = useState<string | null>(null);
+  const [editShares, setEditShares] = useState("");
+  const [editPrice, setEditPrice] = useState("");
 
-  const handleAddStock = () => {
-    if (newSymbol.trim() && newName.trim()) {
-      const newStock = {
-        symbol: newSymbol.toUpperCase().trim(),
-        name: newName.trim()
-      };
-      onUpdateStocks([...stocks, newStock]);
-      setNewSymbol("");
-      setNewName("");
+  const handleAddStock = (selectedStock: { symbol: string; name: string }) => {
+    const newStock = {
+      ...selectedStock,
+      shares: 0,
+      averagePrice: 0
+    };
+    onUpdateStocks([...stocks, newStock]);
+  };
+
+  const handleEditStock = (symbol: string) => {
+    const stock = stocks.find(s => s.symbol === symbol);
+    if (stock) {
+      setEditingStock(symbol);
+      setEditShares(stock.shares?.toString() || "");
+      setEditPrice(stock.averagePrice?.toString() || "");
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (editingStock) {
+      const updatedStocks = stocks.map(stock => 
+        stock.symbol === editingStock 
+          ? { 
+              ...stock, 
+              shares: parseFloat(editShares) || 0,
+              averagePrice: parseFloat(editPrice) || 0
+            }
+          : stock
+      );
+      onUpdateStocks(updatedStocks);
+      setEditingStock(null);
+      setEditShares("");
+      setEditPrice("");
     }
   };
 
@@ -66,23 +94,10 @@ const PortfolioManager = ({ stocks, onUpdateStocks }: PortfolioManagerProps) => 
           {/* Add New Stock */}
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Add New Stock</h3>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Symbol (e.g., AAPL)"
-                value={newSymbol}
-                onChange={(e) => setNewSymbol(e.target.value)}
-                className="flex-1"
-              />
-              <Input
-                placeholder="Company Name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="flex-2"
-              />
-              <Button onClick={handleAddStock} disabled={!newSymbol.trim() || !newName.trim()}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+            <StockSearch 
+              onSelect={handleAddStock}
+              existingSymbols={stocks.map(s => s.symbol)}
+            />
           </div>
 
           {/* Current Portfolio */}
@@ -106,23 +121,59 @@ const PortfolioManager = ({ stocks, onUpdateStocks }: PortfolioManagerProps) => 
                               snapshot.isDragging ? 'border-primary' : 'border-secondary'
                             }`}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-1">
                               <div {...provided.dragHandleProps}>
                                 <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
                               </div>
-                              <div>
+                              <div className="flex-1">
                                 <Badge variant="outline">{stock.symbol}</Badge>
                                 <p className="text-sm text-muted-foreground mt-1">{stock.name}</p>
+                                {editingStock === stock.symbol ? (
+                                  <div className="flex gap-2 mt-2">
+                                    <Input
+                                      placeholder="Shares"
+                                      value={editShares}
+                                      onChange={(e) => setEditShares(e.target.value)}
+                                      className="w-20 h-8 text-xs"
+                                      type="number"
+                                    />
+                                    <Input
+                                      placeholder="Avg Price"
+                                      value={editPrice}
+                                      onChange={(e) => setEditPrice(e.target.value)}
+                                      className="w-24 h-8 text-xs"
+                                      type="number"
+                                      step="0.01"
+                                    />
+                                    <Button size="sm" onClick={handleSaveEdit} className="h-8">
+                                      Save
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {stock.shares ? `${stock.shares} shares @ $${stock.averagePrice?.toFixed(2)}` : 'No position'}
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveStock(stock.symbol)}
-                              className="text-warning hover:text-warning"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditStock(stock.symbol)}
+                                className="text-primary hover:text-primary"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveStock(stock.symbol)}
+                                className="text-warning hover:text-warning"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </Draggable>
