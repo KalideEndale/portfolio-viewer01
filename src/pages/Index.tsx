@@ -3,17 +3,33 @@ import MarketStats from "@/components/MarketStats";
 import StockChart from "@/components/StockChart";
 import PortfolioCard from "@/components/PortfolioCard";
 import StockPortfolio from "@/components/StockPortfolio";
-import StockNews from "@/components/StockNews";
+import NewsSection from "@/components/NewsSection";
+
+// Default portfolio stocks
+const DEFAULT_STOCKS = [
+  { symbol: 'ASML', name: 'ASML Holding N.V.' },
+  { symbol: 'GOOG', name: 'Alphabet Inc.' },
+  { symbol: 'NU', name: 'Nu Holdings Ltd.' },
+  { symbol: 'MELI', name: 'MercadoLibre Inc.' },
+  { symbol: 'NVDA', name: 'NVIDIA Corporation' },
+  { symbol: 'NBIS', name: 'Nebius Group N.V.' },
+  { symbol: 'GRAB', name: 'Grab Holdings Limited' },
+  { symbol: 'TSLA', name: 'Tesla Inc.' },
+  { symbol: 'NIO', name: 'NIO Inc.' },
+  { symbol: 'SPGI', name: 'S&P Global Inc.' },
+  { symbol: 'AMZN', name: 'Amazon.com Inc.' }
+];
 
 const Index = () => {
-  const [selectedStock, setSelectedStock] = useState<string | null>(null);
+  const [portfolioStocks, setPortfolioStocks] = useState(DEFAULT_STOCKS);
+  const [selectedNewsStocks, setSelectedNewsStocks] = useState<string[]>([]);
 
-  const handleViewNews = (symbol: string) => {
-    setSelectedStock(symbol);
-  };
-
-  const handleCloseNews = () => {
-    setSelectedStock(null);
+  const handleToggleNewsStock = (symbol: string) => {
+    setSelectedNewsStocks(prev => 
+      prev.includes(symbol) 
+        ? prev.filter(s => s !== symbol)
+        : [...prev, symbol]
+    );
   };
 
   return (
@@ -35,11 +51,16 @@ const Index = () => {
           </div>
         </div>
         
-        <StockPortfolio onViewNews={handleViewNews} />
+        <StockPortfolio 
+          stocks={portfolioStocks} 
+          onUpdateStocks={setPortfolioStocks} 
+        />
         
-        {selectedStock && (
-          <StockNews symbol={selectedStock} onClose={handleCloseNews} />
-        )}
+        <NewsSection 
+          selectedStocks={selectedNewsStocks}
+          onToggleStock={handleToggleNewsStock}
+          availableStocks={portfolioStocks}
+        />
       </div>
     </div>
   );

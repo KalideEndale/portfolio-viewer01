@@ -1,25 +1,11 @@
-import { ArrowUpIcon, ArrowDownIcon, NewspaperIcon } from "lucide-react";
+import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
+import PortfolioManager from "./PortfolioManager";
 
-// Your portfolio stocks
-const PORTFOLIO_STOCKS = [
-  { symbol: 'ASML', name: 'ASML Holding N.V.' },
-  { symbol: 'GOOG', name: 'Alphabet Inc.' },
-  { symbol: 'NU', name: 'Nu Holdings Ltd.' },
-  { symbol: 'MELI', name: 'MercadoLibre Inc.' },
-  { symbol: 'NVDA', name: 'NVIDIA Corporation' },
-  { symbol: 'NBIS', name: 'Nebius Group N.V.' },
-  { symbol: 'GRAB', name: 'Grab Holdings Limited' },
-  { symbol: 'TSLA', name: 'Tesla Inc.' },
-  { symbol: 'NIO', name: 'NIO Inc.' },
-  { symbol: 'SPGI', name: 'S&P Global Inc.' },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.' }
-];
 
 // Using Yahoo Finance API (free, no key required)
-const fetchStockData = async () => {
-  const symbols = PORTFOLIO_STOCKS.map(stock => stock.symbol).join(',');
+const fetchStockData = async (portfolioStocks: { symbol: string; name: string; }[]) => {
+  const symbols = portfolioStocks.map(stock => stock.symbol).join(',');
   
   try {
     // For demo purposes, using a free API. In production, you'd want to use a more reliable service
@@ -29,7 +15,7 @@ const fetchStockData = async () => {
     
     if (!response.ok) {
       // If API fails, return mock data
-      return PORTFOLIO_STOCKS.map(stock => ({
+      return portfolioStocks.map(stock => ({
         symbol: stock.symbol,
         name: stock.name,
         price: Math.random() * 1000 + 50,
@@ -44,7 +30,7 @@ const fetchStockData = async () => {
   } catch (error) {
     console.log('Using mock data due to API limitations');
     // Return mock data for demo
-    return PORTFOLIO_STOCKS.map(stock => ({
+    return portfolioStocks.map(stock => ({
       symbol: stock.symbol,
       name: stock.name,
       price: Math.random() * 1000 + 50,
@@ -56,13 +42,14 @@ const fetchStockData = async () => {
 };
 
 interface StockPortfolioProps {
-  onViewNews: (symbol: string) => void;
+  stocks: { symbol: string; name: string; }[];
+  onUpdateStocks: (stocks: { symbol: string; name: string; }[]) => void;
 }
 
-const StockPortfolio = ({ onViewNews }: StockPortfolioProps) => {
+const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfolioProps) => {
   const { data: stocks, isLoading } = useQuery({
-    queryKey: ['portfolio-stocks'],
-    queryFn: fetchStockData,
+    queryKey: ['portfolio-stocks', portfolioStocks],
+    queryFn: () => fetchStockData(portfolioStocks),
     refetchInterval: 60000, // Refetch every minute
   });
 
@@ -72,7 +59,10 @@ const StockPortfolio = ({ onViewNews }: StockPortfolioProps) => {
 
   return (
     <div className="glass-card rounded-lg p-6 animate-fade-in">
-      <h2 className="text-xl font-semibold mb-6">Your Stock Portfolio</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold">Your Stock Portfolio</h2>
+        <PortfolioManager stocks={portfolioStocks} onUpdateStocks={onUpdateStocks} />
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -81,7 +71,6 @@ const StockPortfolio = ({ onViewNews }: StockPortfolioProps) => {
               <th className="pb-4">Price</th>
               <th className="pb-4">Change</th>
               <th className="pb-4">Volume</th>
-              <th className="pb-4">News</th>
             </tr>
           </thead>
           <tbody>
@@ -117,17 +106,6 @@ const StockPortfolio = ({ onViewNews }: StockPortfolioProps) => {
                 </td>
                 <td className="py-4 text-sm">
                   {stock.volume ? (stock.volume / 1e6).toFixed(1) + 'M' : '---'}
-                </td>
-                <td className="py-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onViewNews(stock.symbol)}
-                    className="flex items-center gap-1"
-                  >
-                    <NewspaperIcon className="w-3 h-3" />
-                    News
-                  </Button>
                 </td>
               </tr>
             ))}

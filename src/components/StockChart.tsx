@@ -28,7 +28,7 @@ const StockChart = () => {
       <div className="h-[400px] w-full">
         <TradingViewWidget
           symbol={`NASDAQ:${selectedSymbol}`}
-          theme="dark"
+          theme="Dark"
           locale="en"
           autosize
           hide_side_toolbar={false}
