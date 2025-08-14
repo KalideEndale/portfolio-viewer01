@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { TrendingUpIcon, DollarSignIcon, BarChart3Icon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import AveragePriceCalculator from "./AveragePriceCalculator";
 
 // Generate mock portfolio performance data
 const generatePortfolioData = () => {
@@ -33,17 +36,43 @@ const fetchPortfolioPerformance = async () => {
 };
 
 const PortfolioCard = () => {
+  const [timeFrame, setTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
+  
   const { data: portfolioData, isLoading } = useQuery({
     queryKey: ['portfolioPerformance'],
     queryFn: fetchPortfolioPerformance,
     refetchInterval: 300000, // Refetch every 5 minutes
   });
 
-  // Calculate portfolio stats
+  // Calculate portfolio stats based on time frame
   const currentValue = portfolioData?.[portfolioData.length - 1]?.value || 287500;
-  const previousValue = portfolioData?.[portfolioData.length - 2]?.value || 285000;
-  const dailyChange = currentValue - previousValue;
-  const dailyChangePercent = (dailyChange / previousValue) * 100;
+  
+  // Get reference value based on timeframe
+  const getReferenceValue = () => {
+    if (!portfolioData) return 285000;
+    
+    switch (timeFrame) {
+      case 'd': return portfolioData[portfolioData.length - 2]?.value || 285000;
+      case 'w': return portfolioData[Math.max(0, portfolioData.length - 7)]?.value || 280000;
+      case 'm': return portfolioData[0]?.value || 275000;
+      case 'y': return 250000; // Mock yearly starting value
+      default: return portfolioData[portfolioData.length - 2]?.value || 285000;
+    }
+  };
+  
+  const referenceValue = getReferenceValue();
+  const change = currentValue - referenceValue;
+  const changePercent = (change / referenceValue) * 100;
+  
+  const getTimeFrameLabel = () => {
+    switch (timeFrame) {
+      case 'd': return 'Daily P&L';
+      case 'w': return 'Weekly P&L';
+      case 'm': return 'Monthly P&L';
+      case 'y': return 'Yearly P&L';
+      default: return 'Daily P&L';
+    }
+  };
 
   if (isLoading) {
     return (
@@ -75,16 +104,31 @@ const PortfolioCard = () => {
           </div>
           <p className="text-lg font-semibold">${currentValue.toLocaleString()}</p>
         </div>
-        <div className="bg-secondary/20 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <BarChart3Icon className="w-3 h-3 text-success" />
-            <span className="text-xs text-muted-foreground">Daily P&L</span>
+        <div className="bg-secondary/20 rounded-lg p-3 relative">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <BarChart3Icon className="w-3 h-3 text-success" />
+              <span className="text-xs text-muted-foreground">{getTimeFrameLabel()}</span>
+            </div>
+            <div className="flex gap-1">
+              {(['d', 'w', 'm', 'y'] as const).map((period) => (
+                <Button
+                  key={period}
+                  variant={timeFrame === period ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setTimeFrame(period)}
+                  className="h-5 w-5 p-0 text-xs"
+                >
+                  {period}
+                </Button>
+              ))}
+            </div>
           </div>
-          <p className={`text-lg font-semibold ${dailyChange >= 0 ? 'text-success' : 'text-warning'}`}>
-            {dailyChange >= 0 ? '+' : ''}${dailyChange.toFixed(0)}
+          <p className={`text-lg font-semibold ${change >= 0 ? 'text-success' : 'text-warning'}`}>
+            {change >= 0 ? '+' : ''}${change.toFixed(0)}
           </p>
-          <span className={`text-xs ${dailyChange >= 0 ? 'text-success' : 'text-warning'}`}>
-            ({dailyChangePercent >= 0 ? '+' : ''}{dailyChangePercent.toFixed(2)}%)
+          <span className={`text-xs ${change >= 0 ? 'text-success' : 'text-warning'}`}>
+            ({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%)
           </span>
         </div>
       </div>
@@ -125,6 +169,11 @@ const PortfolioCard = () => {
             />
           </LineChart>
         </ResponsiveContainer>
+      </div>
+      
+      {/* Average Price Calculator */}
+      <div className="mt-4">
+        <AveragePriceCalculator />
       </div>
     </div>
   );

@@ -2,6 +2,35 @@ import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import PortfolioManager from "./PortfolioManager";
 
+// Helper function to get company domain for logo fetching
+const getCompanyDomain = (symbol: string): string => {
+  const domainMap: Record<string, string> = {
+    'AAPL': 'apple.com',
+    'MSFT': 'microsoft.com',
+    'GOOGL': 'google.com',
+    'GOOG': 'google.com',
+    'AMZN': 'amazon.com',
+    'TSLA': 'tesla.com',
+    'META': 'meta.com',
+    'NVDA': 'nvidia.com',
+    'NFLX': 'netflix.com',
+    'AMD': 'amd.com',
+    'ASML': 'asml.com',
+    'NU': 'nubank.com.br',
+    'MELI': 'mercadolibre.com',
+    'GRAB': 'grab.com',
+    'NIO': 'nio.com',
+    'SPGI': 'spglobal.com',
+    'JPM': 'jpmorganchase.com',
+    'V': 'visa.com',
+    'MA': 'mastercard.com',
+    'DIS': 'disney.com',
+    // Add more mappings as needed
+  };
+  
+  return domainMap[symbol] || `${symbol.toLowerCase()}.com`;
+};
+
 
 // Using Yahoo Finance API (free, no key required)
 const fetchStockData = async (portfolioStocks: { symbol: string; name: string; shares?: number; averagePrice?: number; }[]) => {
@@ -100,11 +129,21 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
               return (
                 <tr key={stock.symbol} className="border-t border-secondary">
                   <td className="py-4">
-                    <div>
-                      <p className="font-medium">{stock.symbol}</p>
-                      <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                        {stock.name}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={`https://logo.clearbit.com/${getCompanyDomain(stock.symbol)}`}
+                        alt={`${stock.symbol} logo`}
+                        className="w-8 h-8 rounded-full bg-secondary/20 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://via.placeholder.com/32/8989DE/FFFFFF?text=${stock.symbol.charAt(0)}`;
+                        }}
+                      />
+                      <div>
+                        <p className="font-medium">{stock.symbol}</p>
+                        <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                          {stock.name}
+                        </p>
+                      </div>
                     </div>
                   </td>
                   <td className="py-4 font-medium">
