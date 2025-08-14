@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUpIcon, DollarSignIcon, BarChart3Icon } from "lucide-react";
+import { TrendingUpIcon, DollarSignIcon, BarChart3Icon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
 import AveragePriceCalculator from "./AveragePriceCalculator";
 
 // Generate mock portfolio performance data
@@ -37,6 +39,7 @@ const fetchPortfolioPerformance = async () => {
 
 const PortfolioCard = () => {
   const [timeFrame, setTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
+  const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   
   const { data: portfolioData, isLoading } = useQuery({
     queryKey: ['portfolioPerformance'],
@@ -90,8 +93,14 @@ const PortfolioCard = () => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Portfolio Performance</h2>
         <div className="flex items-center gap-2">
-          <TrendingUpIcon className="w-4 h-4 text-success" />
-          <span className="text-sm text-success">30D</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={togglePrivacyMode}
+            className="h-8 w-8 p-0"
+          >
+            {isPrivacyMode ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
       
@@ -102,7 +111,9 @@ const PortfolioCard = () => {
             <DollarSignIcon className="w-3 h-3 text-primary" />
             <span className="text-xs text-muted-foreground">Total Value</span>
           </div>
-          <p className="text-lg font-semibold">${currentValue.toLocaleString()}</p>
+          <p className="text-lg font-semibold">
+            {formatPrivateValue(currentValue, isPrivacyMode)}
+          </p>
         </div>
         <div className="bg-secondary/20 rounded-lg p-3 relative">
           <div className="flex items-center justify-between mb-1">
@@ -110,7 +121,7 @@ const PortfolioCard = () => {
               <BarChart3Icon className="w-3 h-3 text-success" />
               <span className="text-xs text-muted-foreground">{getTimeFrameLabel()}</span>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 p-1 bg-muted/20 rounded">
               {(['d', 'w', 'm', 'y'] as const).map((period) => (
                 <Button
                   key={period}
@@ -125,10 +136,10 @@ const PortfolioCard = () => {
             </div>
           </div>
           <p className={`text-lg font-semibold ${change >= 0 ? 'text-success' : 'text-warning'}`}>
-            {change >= 0 ? '+' : ''}${change.toFixed(0)}
+            {isPrivacyMode ? '••••' : `${change >= 0 ? '+' : ''}$${change.toFixed(0)}`}
           </p>
           <span className={`text-xs ${change >= 0 ? 'text-success' : 'text-warning'}`}>
-            ({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%)
+            {isPrivacyMode ? '••••' : `(${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`}
           </span>
         </div>
       </div>
