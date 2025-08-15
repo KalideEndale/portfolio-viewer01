@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from 'react';
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
 import PortfolioManager from "./PortfolioManager";
+import AveragePriceCalculator from "./AveragePriceCalculator";
 
 // Helper function to get company domain for logo fetching
 const getCompanyDomain = (symbol: string): string => {
@@ -122,7 +123,10 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
     <div className="glass-card rounded-lg p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Your Stock Portfolio</h2>
-        <PortfolioManager stocks={portfolioStocks} onUpdateStocks={onUpdateStocks} />
+        <div className="flex items-center gap-2">
+          <AveragePriceCalculator />
+          <PortfolioManager stocks={portfolioStocks} onUpdateStocks={onUpdateStocks} />
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -223,7 +227,7 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
                       ) : (
                         <ArrowDownIcon className="w-3 h-3" />
                       )}
-                      <span className="mr-1">Δ</span>
+                      
                       {isPrivacyMode ? '••••' : `${getChangeForTimeFrame(stock.changePercent || 0, globalChangeTimeFrame) >= 0 ? '+' : ''}${getChangeForTimeFrame(stock.changePercent || 0, globalChangeTimeFrame).toFixed(2)}%`}
                     </span>
                   </td>
