@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PortfolioPerformance from "@/components/PortfolioPerformance";
 import StockChart from "@/components/StockChart";
+import PortfolioCard from "@/components/PortfolioCard";
 import StockPortfolio from "@/components/StockPortfolio";
 import NewsSection from "@/components/NewsSection";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -46,8 +47,11 @@ const Index = () => {
         <PortfolioPerformance />
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-3">
             <StockChart />
+          </div>
+          <div>
+            <PortfolioCard />
           </div>
         </div>
         
