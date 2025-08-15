@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import AveragePriceCalculator from "./AveragePriceCalculator";
 
 const PortfolioPerformance = () => {
   const [plTimeFrame, setPlTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
@@ -22,7 +21,6 @@ const PortfolioPerformance = () => {
     <div className="glass-card p-6 rounded-lg mb-8 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Portfolio Performance</h2>
-        <AveragePriceCalculator />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
