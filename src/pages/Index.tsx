@@ -46,9 +46,12 @@ const Index = () => {
         
         <PortfolioPerformance />
         
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-          <div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-3">
             <StockChart />
+          </div>
+          <div>
+            <PortfolioCard />
           </div>
         </div>
         
