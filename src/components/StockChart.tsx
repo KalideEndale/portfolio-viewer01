@@ -4,6 +4,25 @@ import { Button } from "@/components/ui/button";
 
 const PORTFOLIO_SYMBOLS = ['ASML', 'GOOG', 'NU', 'MELI', 'NVDA', 'NBIS', 'GRAB', 'TSLA', 'NIO', 'SPGI', 'AMZN'];
 
+// Map symbols to their appropriate exchanges
+const getSymbolWithExchange = (symbol: string): string => {
+  const exchangeMap: Record<string, string> = {
+    'ASML': 'NASDAQ:ASML',
+    'GOOG': 'NASDAQ:GOOG',
+    'NU': 'NYSE:NU',
+    'MELI': 'NASDAQ:MELI',
+    'NVDA': 'NASDAQ:NVDA',
+    'NBIS': 'NASDAQ:NBIS',
+    'GRAB': 'NASDAQ:GRAB',
+    'TSLA': 'NASDAQ:TSLA',
+    'NIO': 'NYSE:NIO',
+    'SPGI': 'NYSE:SPGI',
+    'AMZN': 'NASDAQ:AMZN'
+  };
+  
+  return exchangeMap[symbol] || `NASDAQ:${symbol}`;
+};
+
 const StockChart = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('NVDA');
 
@@ -27,7 +46,7 @@ const StockChart = () => {
       </div>
       <div className="h-[400px] w-full">
         <TradingViewWidget
-          symbol={`NASDAQ:${selectedSymbol}`}
+          symbol={getSymbolWithExchange(selectedSymbol)}
           theme="Dark"
           locale="en"
           autosize

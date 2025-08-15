@@ -1,6 +1,6 @@
 import { ArrowUpIcon, ArrowDownIcon, ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from 'react';
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
@@ -83,8 +83,24 @@ interface StockPortfolioProps {
   onUpdateStocks: (stocks: { symbol: string; name: string; shares?: number; averagePrice?: number; }[]) => void;
 }
 
+// Helper function to get change percentage for different time frames
+const getChangeForTimeFrame = (dailyChange: number, timeFrame: 'd' | 'w' | 'm' | 'y'): number => {
+  switch (timeFrame) {
+    case 'd':
+      return dailyChange;
+    case 'w':
+      return dailyChange * 1.2; // Mock weekly multiplier
+    case 'm':
+      return dailyChange * 2.1; // Mock monthly multiplier
+    case 'y':
+      return dailyChange * 8.5; // Mock yearly multiplier
+    default:
+      return dailyChange;
+  }
+};
+
 const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfolioProps) => {
-  const [changeTimeFrame, setChangeTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
+  const [globalChangeTimeFrame, setGlobalChangeTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
   const { isPrivacyMode } = usePrivacy();
   const { data: stocks, isLoading } = useQuery({
     queryKey: ['portfolio-stocks', portfolioStocks],
@@ -119,7 +135,31 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
               <th className="pb-4">Position Value</th>
               <th className="pb-4">P&L</th>
               <th className="pb-4">% Portfolio</th>
-              <th className="pb-4">Change</th>
+              <th className="pb-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1">
+                      Change
+                      <ChevronDownIcon className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-card border border-border">
+                    <DropdownMenuLabel className="text-xs">Time Period</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setGlobalChangeTimeFrame('d')} className={globalChangeTimeFrame === 'd' ? 'bg-secondary' : ''}>
+                      Day
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setGlobalChangeTimeFrame('w')} className={globalChangeTimeFrame === 'w' ? 'bg-secondary' : ''}>
+                      Week
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setGlobalChangeTimeFrame('m')} className={globalChangeTimeFrame === 'm' ? 'bg-secondary' : ''}>
+                      Month
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setGlobalChangeTimeFrame('y')} className={globalChangeTimeFrame === 'y' ? 'bg-secondary' : ''}>
+                      Year
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -153,16 +193,16 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
                     </div>
                   </td>
                   <td className="py-4 font-medium">
-                    {formatPrivateValue(currentPrice, isPrivacyMode, "••••")}
+                    ${currentPrice.toFixed(2)}
                   </td>
                   <td className="py-4">
-                    {isPrivacyMode ? '••••' : (shares > 0 ? shares.toLocaleString() : '-')}
+                    {shares > 0 ? shares.toLocaleString() : '-'}
                   </td>
                   <td className="py-4">
-                    {formatPrivateValue(averagePrice || 0, isPrivacyMode, "••••")}
+                    {isPrivacyMode ? '••••' : (averagePrice > 0 ? `$${averagePrice.toFixed(2)}` : '-')}
                   </td>
                   <td className="py-4 font-medium">
-                    {formatPrivateValue(positionValue, isPrivacyMode, "••••")}
+                    {isPrivacyMode ? '••••' : `$${positionValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
                   </td>
                   <td className="py-4">
                     {shares > 0 && averagePrice > 0 ? (
@@ -172,52 +212,20 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
                     ) : '-'}
                   </td>
                   <td className="py-4">
-                    {isPrivacyMode ? '••••' : (portfolioPercentage > 0 ? `${portfolioPercentage.toFixed(1)}%` : '-')}
+                    {portfolioPercentage > 0 ? `${portfolioPercentage.toFixed(1)}%` : '-'}
                   </td>
                   <td className="py-4">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-auto p-1 flex items-center gap-1">
-                          <span className={`flex items-center gap-1 ${
-                            (stock.changePercent || 0) >= 0 ? "text-success" : "text-warning"
-                          }`}>
-                            {(stock.changePercent || 0) >= 0 ? (
-                              <ArrowUpIcon className="w-3 h-3" />
-                            ) : (
-                              <ArrowDownIcon className="w-3 h-3" />
-                            )}
-                            {isPrivacyMode ? '••••' : `${Math.abs(stock.changePercent || 0).toFixed(2)}%`}
-                          </span>
-                          <ChevronDownIcon className="ml-1 h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-background border border-border">
-                        <DropdownMenuItem className="flex justify-between">
-                          <span>Day:</span>
-                          <span className={`${(stock.changePercent || 0) >= 0 ? "text-success" : "text-warning"}`}>
-                            {isPrivacyMode ? '••••' : `${(stock.changePercent || 0) >= 0 ? '+' : ''}${(stock.changePercent || 0).toFixed(2)}%`}
-                          </span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex justify-between">
-                          <span>Week:</span>
-                          <span className={`${((stock.changePercent || 0) * 1.2) >= 0 ? "text-success" : "text-warning"}`}>
-                            {isPrivacyMode ? '••••' : `${((stock.changePercent || 0) * 1.2) >= 0 ? '+' : ''}${((stock.changePercent || 0) * 1.2).toFixed(2)}%`}
-                          </span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex justify-between">
-                          <span>Month:</span>
-                          <span className={`${((stock.changePercent || 0) * 2.1) >= 0 ? "text-success" : "text-warning"}`}>
-                            {isPrivacyMode ? '••••' : `${((stock.changePercent || 0) * 2.1) >= 0 ? '+' : ''}${((stock.changePercent || 0) * 2.1).toFixed(2)}%`}
-                          </span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex justify-between">
-                          <span>Year:</span>
-                          <span className={`${((stock.changePercent || 0) * 8.5) >= 0 ? "text-success" : "text-warning"}`}>
-                            {isPrivacyMode ? '••••' : `${((stock.changePercent || 0) * 8.5) >= 0 ? '+' : ''}${((stock.changePercent || 0) * 8.5).toFixed(2)}%`}
-                          </span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <span className={`flex items-center gap-1 ${
+                      (getChangeForTimeFrame(stock.changePercent || 0, globalChangeTimeFrame)) >= 0 ? "text-success" : "text-warning"
+                    }`}>
+                      {(getChangeForTimeFrame(stock.changePercent || 0, globalChangeTimeFrame)) >= 0 ? (
+                        <ArrowUpIcon className="w-3 h-3" />
+                      ) : (
+                        <ArrowDownIcon className="w-3 h-3" />
+                      )}
+                      <span className="mr-1">Δ</span>
+                      {isPrivacyMode ? '••••' : `${getChangeForTimeFrame(stock.changePercent || 0, globalChangeTimeFrame) >= 0 ? '+' : ''}${getChangeForTimeFrame(stock.changePercent || 0, globalChangeTimeFrame).toFixed(2)}%`}
+                    </span>
                   </td>
                 </tr>
               );

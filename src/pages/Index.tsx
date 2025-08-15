@@ -1,9 +1,10 @@
 import { useState } from "react";
-import MarketStats from "@/components/MarketStats";
+import PortfolioPerformance from "@/components/PortfolioPerformance";
 import StockChart from "@/components/StockChart";
 import PortfolioCard from "@/components/PortfolioCard";
 import StockPortfolio from "@/components/StockPortfolio";
 import NewsSection from "@/components/NewsSection";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Default portfolio stocks
 const DEFAULT_STOCKS = [
@@ -35,12 +36,15 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Stock Portfolio Dashboard</h1>
-          <p className="text-muted-foreground">Track your investments and stay updated with curated news</p>
+        <header className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Stock Portfolio Dashboard</h1>
+            <p className="text-muted-foreground">Track your investments and stay updated with curated news</p>
+          </div>
+          <ThemeToggle />
         </header>
         
-        <MarketStats />
+        <PortfolioPerformance />
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
