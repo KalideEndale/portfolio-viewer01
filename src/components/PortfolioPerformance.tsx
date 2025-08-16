@@ -22,22 +22,7 @@ const PortfolioPerformance = () => {
         <h2 className="text-xl font-semibold">Portfolio Performance</h2>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Total Portfolio Value */}
-        <div className="p-4 border border-border rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Total Portfolio Value</h3>
-            <DollarSignIcon className="w-4 h-4 text-success" />
-          </div>
-          <p className="text-2xl font-semibold">
-            {formatPrivateValue(287500, isPrivacyMode)}
-          </p>
-          <span className="text-sm text-success flex items-center gap-1 mt-1">
-            <ArrowUpIcon className="w-3 h-3" />
-            3.2%
-          </span>
-        </div>
-
+      <div className="max-w-md">
         {/* P&L Section with Collapsible Time Frames */}
         <div className="p-4 border border-border rounded-lg">
           <Collapsible open={isPlExpanded} onOpenChange={setIsPlExpanded}>
