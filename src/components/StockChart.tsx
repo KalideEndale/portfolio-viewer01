@@ -1,6 +1,7 @@
 import TradingViewWidget from 'react-tradingview-widget';
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
 
 const PORTFOLIO_SYMBOLS = ['ASML', 'GOOG', 'NU', 'MELI', 'NVDA', 'NBIS', 'GRAB', 'TSLA', 'NIO', 'SPGI', 'AMZN'];
 
@@ -25,6 +26,7 @@ const getSymbolWithExchange = (symbol: string): string => {
 
 const StockChart = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('NVDA');
+  const { theme } = useTheme();
 
   return (
     <div className="glass-card p-6 rounded-lg mb-8 animate-fade-in">
@@ -47,13 +49,13 @@ const StockChart = () => {
       <div className="h-[400px] w-full">
         <TradingViewWidget
           symbol={getSymbolWithExchange(selectedSymbol)}
-          theme="Dark"
+          theme={theme === "dark" ? "Dark" : "Light"}
           locale="en"
           autosize
           hide_side_toolbar={false}
           allow_symbol_change={true}
           interval="D"
-          toolbar_bg="#141413"
+          toolbar_bg={theme === "dark" ? "#141413" : "#ffffff"}
           enable_publishing={false}
           hide_top_toolbar={false}
           save_image={false}
