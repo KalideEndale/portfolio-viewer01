@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useTheme } from "next-themes";
 
 // Generate mock portfolio performance data
 const generatePortfolioData = () => {
@@ -41,6 +42,7 @@ const PortfolioCard = () => {
   const [timeFrame, setTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
   const [isTimeFrameExpanded, setIsTimeFrameExpanded] = useState(false);
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
+  const { theme } = useTheme();
   
   const { data: portfolioData, isLoading } = useQuery({
     queryKey: ['portfolioPerformance'],
@@ -106,7 +108,7 @@ const PortfolioCard = () => {
       </div>
       
       {/* Portfolio Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-secondary/20 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-1">
             <DollarSignIcon className="w-3 h-3 text-primary" />
@@ -154,14 +156,6 @@ const PortfolioCard = () => {
             </CollapsibleContent>
           </Collapsible>
         </div>
-        <div className="bg-secondary/20 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <BarChart3Icon className="w-3 h-3 text-primary" />
-            <span className="text-xs text-muted-foreground">Active Stocks</span>
-          </div>
-          <p className="text-lg font-semibold">11</p>
-          <span className="text-xs text-muted-foreground">Holdings</span>
-        </div>
       </div>
 
       {/* Performance Chart */}
@@ -170,23 +164,23 @@ const PortfolioCard = () => {
           <LineChart data={portfolioData}>
             <XAxis 
               dataKey="date" 
-              stroke="#E6E4DD"
+              stroke={theme === "dark" ? "#E6E4DD" : "#374151"}
               fontSize={10}
               interval="preserveStartEnd"
             />
             <YAxis 
-              stroke="#E6E4DD"
+              stroke={theme === "dark" ? "#E6E4DD" : "#374151"}
               fontSize={10}
               domain={['dataMin - 1000', 'dataMax + 1000']}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
             />
             <Tooltip 
               contentStyle={{ 
-                background: '#3A3935',
-                border: '1px solid #605F5B',
+                background: theme === "dark" ? '#3A3935' : '#ffffff',
+                border: theme === "dark" ? '1px solid #605F5B' : '1px solid #e5e7eb',
                 borderRadius: '8px'
               }}
-              labelStyle={{ color: '#E6E4DD' }}
+              labelStyle={{ color: theme === "dark" ? '#E6E4DD' : '#374151' }}
               itemStyle={{ color: '#8989DE' }}
               formatter={(value: number) => [`$${value.toLocaleString()}`, 'Portfolio Value']}
             />
