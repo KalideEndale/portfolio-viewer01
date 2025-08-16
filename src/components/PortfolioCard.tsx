@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUpIcon, DollarSignIcon, BarChart3Icon, EyeIcon, EyeOffIcon } from "lucide-react";
+import { TrendingUpIcon, DollarSignIcon, BarChart3Icon, EyeIcon, EyeOffIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
-import AveragePriceCalculator from "./AveragePriceCalculator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 // Generate mock portfolio performance data
 const generatePortfolioData = () => {
@@ -39,6 +39,7 @@ const fetchPortfolioPerformance = async () => {
 
 const PortfolioCard = () => {
   const [timeFrame, setTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
+  const [isTimeFrameExpanded, setIsTimeFrameExpanded] = useState(false);
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   
   const { data: portfolioData, isLoading } = useQuery({
@@ -105,7 +106,7 @@ const PortfolioCard = () => {
       </div>
       
       {/* Portfolio Summary */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-secondary/20 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-1">
             <DollarSignIcon className="w-3 h-3 text-primary" />
@@ -116,31 +117,50 @@ const PortfolioCard = () => {
           </p>
         </div>
         <div className="bg-secondary/20 rounded-lg p-3 relative">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <BarChart3Icon className="w-3 h-3 text-success" />
-              <span className="text-xs text-muted-foreground">{getTimeFrameLabel()}</span>
-            </div>
-            <div className="flex gap-1 p-1 bg-muted/20 rounded">
-              {(['d', 'w', 'm', 'y'] as const).map((period) => (
-                <Button
-                  key={period}
-                  variant={timeFrame === period ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setTimeFrame(period)}
-                  className="h-5 w-5 p-0 text-xs"
-                >
-                  {period}
-                </Button>
-              ))}
-            </div>
+          <Collapsible open={isTimeFrameExpanded} onOpenChange={setIsTimeFrameExpanded}>
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between mb-1 cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <BarChart3Icon className="w-3 h-3 text-success" />
+                  <span className="text-xs text-muted-foreground">{getTimeFrameLabel()}</span>
+                </div>
+                {isTimeFrameExpanded ? (
+                  <ChevronUpIcon className="w-3 h-3 text-muted-foreground" />
+                ) : (
+                  <ChevronDownIcon className="w-3 h-3 text-muted-foreground" />
+                )}
+              </div>
+            </CollapsibleTrigger>
+            <p className={`text-lg font-semibold ${change >= 0 ? 'text-success' : 'text-warning'}`}>
+              {isPrivacyMode ? '••••' : `${change >= 0 ? '+' : ''}$${change.toFixed(0)}`}
+            </p>
+            <span className={`text-xs ${change >= 0 ? 'text-success' : 'text-warning'}`}>
+              {isPrivacyMode ? '••••' : `(${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`}
+            </span>
+            <CollapsibleContent className="mt-2">
+              <div className="grid grid-cols-2 gap-1">
+                {(['d', 'w', 'm', 'y'] as const).map((period) => (
+                  <Button
+                    key={period}
+                    variant={timeFrame === period ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTimeFrame(period)}
+                    className="h-6 text-xs"
+                  >
+                    {period === 'd' ? 'Day' : period === 'w' ? 'Week' : period === 'm' ? 'Month' : 'Year'}
+                  </Button>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+        <div className="bg-secondary/20 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart3Icon className="w-3 h-3 text-primary" />
+            <span className="text-xs text-muted-foreground">Active Stocks</span>
           </div>
-          <p className={`text-lg font-semibold ${change >= 0 ? 'text-success' : 'text-warning'}`}>
-            {isPrivacyMode ? '••••' : `${change >= 0 ? '+' : ''}$${change.toFixed(0)}`}
-          </p>
-          <span className={`text-xs ${change >= 0 ? 'text-success' : 'text-warning'}`}>
-            {isPrivacyMode ? '••••' : `(${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`}
-          </span>
+          <p className="text-lg font-semibold">11</p>
+          <span className="text-xs text-muted-foreground">Holdings</span>
         </div>
       </div>
 
@@ -180,11 +200,6 @@ const PortfolioCard = () => {
             />
           </LineChart>
         </ResponsiveContainer>
-      </div>
-      
-      {/* Average Price Calculator */}
-      <div className="mt-4">
-        <AveragePriceCalculator />
       </div>
     </div>
   );

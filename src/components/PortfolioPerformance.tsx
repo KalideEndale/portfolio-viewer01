@@ -1,10 +1,8 @@
-import { ArrowUpIcon, ArrowDownIcon, TrendingUpIcon, DollarSignIcon, BarChartIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { ArrowUpIcon, ArrowDownIcon, TrendingUpIcon, DollarSignIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import AveragePriceCalculator from "./AveragePriceCalculator";
-
 const PortfolioPerformance = () => {
   const [plTimeFrame, setPlTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
   const [isPlExpanded, setIsPlExpanded] = useState(false);
@@ -22,10 +20,9 @@ const PortfolioPerformance = () => {
     <div className="glass-card p-6 rounded-lg mb-8 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Portfolio Performance</h2>
-        <AveragePriceCalculator />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Total Portfolio Value */}
         <div className="p-4 border border-border rounded-lg">
           <div className="flex items-center justify-between mb-2">
@@ -82,18 +79,6 @@ const PortfolioPerformance = () => {
               </div>
             </CollapsibleContent>
           </Collapsible>
-        </div>
-
-        {/* Active Stocks */}
-        <div className="p-4 border border-border rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Active Stocks</h3>
-            <BarChartIcon className="w-4 h-4 text-primary" />
-          </div>
-          <p className="text-2xl font-semibold">11</p>
-          <span className="text-sm text-muted-foreground">
-            Holdings
-          </span>
         </div>
       </div>
     </div>
