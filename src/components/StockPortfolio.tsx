@@ -1,4 +1,4 @@
-import { ArrowUpIcon, ArrowDownIcon, ChevronDownIcon } from "lucide-react";
+import { ArrowUpIcon, ArrowDownIcon, ChevronDownIcon, ArrowUpDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
@@ -102,6 +102,8 @@ const getChangeForTimeFrame = (dailyChange: number, timeFrame: 'd' | 'w' | 'm' |
 
 const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfolioProps) => {
   const [globalChangeTimeFrame, setGlobalChangeTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
+  const [sortBy, setSortBy] = useState<'position' | 'pnl' | 'portfolio' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { isPrivacyMode } = usePrivacy();
   const { data: stocks, isLoading } = useQuery({
     queryKey: ['portfolio-stocks', portfolioStocks],
@@ -114,6 +116,44 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
     const positionValue = (stock.shares || 0) * (stock.price || 0);
     return total + positionValue;
   }, 0) || 0;
+
+  // Sort stocks based on current sort criteria
+  const sortedStocks = stocks ? [...stocks].sort((a, b) => {
+    if (!sortBy) return 0;
+    
+    let aValue = 0, bValue = 0;
+    
+    if (sortBy === 'position') {
+      aValue = (a.shares || 0) * (a.price || 0);
+      bValue = (b.shares || 0) * (b.price || 0);
+    } else if (sortBy === 'pnl') {
+      const aPnL = ((a.shares || 0) * (a.price || 0)) - ((a.shares || 0) * (a.averagePrice || 0));
+      const bPnL = ((b.shares || 0) * (b.price || 0)) - ((b.shares || 0) * (b.averagePrice || 0));
+      aValue = aPnL;
+      bValue = bPnL;
+    } else if (sortBy === 'portfolio') {
+      const aPosition = (a.shares || 0) * (a.price || 0);
+      const bPosition = (b.shares || 0) * (b.price || 0);
+      aValue = totalPortfolioValue > 0 ? (aPosition / totalPortfolioValue) * 100 : 0;
+      bValue = totalPortfolioValue > 0 ? (bPosition / totalPortfolioValue) * 100 : 0;
+    }
+    
+    return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+  }) : [];
+
+  const handleSort = (column: 'position' | 'pnl' | 'portfolio') => {
+    if (sortBy === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortDirection('desc');
+    }
+  };
+
+  const getSortIcon = (column: 'position' | 'pnl' | 'portfolio') => {
+    if (sortBy !== column) return <ArrowUpDownIcon className="w-3 h-3 opacity-30" />;
+    return sortDirection === 'asc' ? <ArrowUpIcon className="w-3 h-3" /> : <ArrowDownIcon className="w-3 h-3" />;
+  };
 
   if (isLoading) {
     return <div className="glass-card rounded-lg p-6 animate-pulse">Loading portfolio...</div>;
@@ -136,9 +176,33 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
               <th className="pb-4">Price</th>
               <th className="pb-4">Shares</th>
               <th className="pb-4">Avg Price</th>
-              <th className="pb-4">Position Value</th>
-              <th className="pb-4">P&L</th>
-              <th className="pb-4">% Portfolio</th>
+              <th className="pb-4">
+                <button 
+                  onClick={() => handleSort('position')}
+                  className="flex items-center gap-1 hover:text-foreground transition-colors"
+                >
+                  Position Value
+                  {getSortIcon('position')}
+                </button>
+              </th>
+              <th className="pb-4">
+                <button 
+                  onClick={() => handleSort('pnl')}
+                  className="flex items-center gap-1 hover:text-foreground transition-colors"
+                >
+                  P&L
+                  {getSortIcon('pnl')}
+                </button>
+              </th>
+              <th className="pb-4">
+                <button 
+                  onClick={() => handleSort('portfolio')}
+                  className="flex items-center gap-1 hover:text-foreground transition-colors"
+                >
+                  % Portfolio
+                  {getSortIcon('portfolio')}
+                </button>
+              </th>
               <th className="pb-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -167,7 +231,7 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
             </tr>
           </thead>
           <tbody>
-            {stocks?.map((stock) => {
+            {sortedStocks.map((stock) => {
               const shares = stock.shares || 0;
               const averagePrice = stock.averagePrice || 0;
               const currentPrice = stock.price || 0;
