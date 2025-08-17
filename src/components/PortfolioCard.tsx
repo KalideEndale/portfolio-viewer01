@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUpIcon, DollarSignIcon, BarChart3Icon, EyeIcon, EyeOffIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { TrendingUpIcon, DollarSignIcon, BarChart3Icon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Generate mock portfolio performance data
 const generatePortfolioData = () => {
@@ -39,7 +39,7 @@ const fetchPortfolioPerformance = async () => {
 
 const PortfolioCard = () => {
   const [timeFrame, setTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
-  const [isTimeFrameExpanded, setIsTimeFrameExpanded] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   
   const { data: portfolioData, isLoading } = useQuery({
@@ -116,43 +116,44 @@ const PortfolioCard = () => {
             {formatPrivateValue(currentValue, isPrivacyMode)}
           </p>
         </div>
-        <div className="bg-secondary/20 rounded-lg p-3 relative">
-          <Collapsible open={isTimeFrameExpanded} onOpenChange={setIsTimeFrameExpanded}>
-            <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between mb-1 cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <BarChart3Icon className="w-3 h-3 text-success" />
-                  <span className="text-xs text-muted-foreground">{getTimeFrameLabel()}</span>
+        <div className="bg-secondary/20 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart3Icon className="w-3 h-3 text-success" />
+            <span className="text-xs text-muted-foreground">{getTimeFrameLabel()}</span>
+            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button className="ml-auto px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full hover:bg-primary/30 transition-colors">
+                  {timeFrame.toUpperCase()}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-1 bg-card border border-border shadow-lg" align="end">
+                <div className="flex flex-col gap-1">
+                  {(['d', 'w', 'm', 'y'] as const).map((period) => (
+                    <button
+                      key={period}
+                      onClick={() => {
+                        setTimeFrame(period);
+                        setIsPopoverOpen(false);
+                      }}
+                      className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                        timeFrame === period 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {period === 'd' ? 'Day' : period === 'w' ? 'Week' : period === 'm' ? 'Month' : 'Year'}
+                    </button>
+                  ))}
                 </div>
-                {isTimeFrameExpanded ? (
-                  <ChevronUpIcon className="w-3 h-3 text-muted-foreground" />
-                ) : (
-                  <ChevronDownIcon className="w-3 h-3 text-muted-foreground" />
-                )}
-              </div>
-            </CollapsibleTrigger>
-            <p className={`text-lg font-semibold ${change >= 0 ? 'text-success' : 'text-warning'}`}>
-              {isPrivacyMode ? '••••' : `${change >= 0 ? '+' : ''}$${change.toFixed(0)}`}
-            </p>
-            <span className={`text-xs ${change >= 0 ? 'text-success' : 'text-warning'}`}>
-              {isPrivacyMode ? '••••' : `(${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`}
-            </span>
-            <CollapsibleContent className="mt-2">
-              <div className="grid grid-cols-2 gap-1">
-                {(['d', 'w', 'm', 'y'] as const).map((period) => (
-                  <Button
-                    key={period}
-                    variant={timeFrame === period ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setTimeFrame(period)}
-                    className="h-6 text-xs"
-                  >
-                    {period === 'd' ? 'Day' : period === 'w' ? 'Week' : period === 'm' ? 'Month' : 'Year'}
-                  </Button>
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <p className={`text-lg font-semibold ${change >= 0 ? 'text-success' : 'text-warning'}`}>
+            {isPrivacyMode ? '••••' : `${change >= 0 ? '+' : ''}$${change.toFixed(0)}`}
+          </p>
+          <span className={`text-xs ${change >= 0 ? 'text-success' : 'text-warning'}`}>
+            {isPrivacyMode ? '••••' : `(${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`}
+          </span>
         </div>
         <div className="bg-secondary/20 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-1">
