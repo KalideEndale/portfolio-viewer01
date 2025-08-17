@@ -170,24 +170,25 @@ const PortfolioCard = () => {
           <LineChart data={portfolioData}>
             <XAxis 
               dataKey="date" 
-              stroke="#E6E4DD"
+              stroke="hsl(var(--muted-foreground))"
               fontSize={10}
               interval="preserveStartEnd"
             />
             <YAxis 
-              stroke="#E6E4DD"
+              stroke="hsl(var(--muted-foreground))"
               fontSize={10}
               domain={['dataMin - 1000', 'dataMax + 1000']}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
             />
             <Tooltip 
               contentStyle={{ 
-                background: '#3A3935',
-                border: '1px solid #605F5B',
-                borderRadius: '8px'
+                background: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                color: 'hsl(var(--card-foreground))'
               }}
-              labelStyle={{ color: '#E6E4DD' }}
-              itemStyle={{ color: '#8989DE' }}
+              labelStyle={{ color: 'hsl(var(--card-foreground))' }}
+              itemStyle={{ color: 'hsl(var(--primary))' }}
               formatter={(value: number) => [`$${value.toLocaleString()}`, 'Portfolio Value']}
             />
             <Line 
