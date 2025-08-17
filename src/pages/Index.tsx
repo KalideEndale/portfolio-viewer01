@@ -43,12 +43,11 @@ const Index = () => {
           <ThemeToggle />
         </header>
         
+        <PortfolioCard />
+        
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <StockChart />
-          </div>
-          <div>
-            <PortfolioCard />
           </div>
         </div>
         
