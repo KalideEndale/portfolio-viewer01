@@ -1,11 +1,13 @@
 import { ArrowUpIcon, ArrowDownIcon, ChevronDownIcon, ArrowUpDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from 'react';
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
 import PortfolioManager from "./PortfolioManager";
 import AveragePriceCalculator from "./AveragePriceCalculator";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 // Helper function to get company domain for logo fetching
 const getCompanyDomain = (symbol: string): string => {
@@ -98,6 +100,67 @@ const getChangeForTimeFrame = (dailyChange: number, timeFrame: 'd' | 'w' | 'm' |
     default:
       return dailyChange;
   }
+};
+
+// Mock AI-generated quarterly overviews and performance data
+const getCompanyOverview = (symbol: string) => {
+  const overviews: Record<string, { summary: string; quarterlyData: { quarter: string; revenue: number; eps: number; }[] }> = {
+    'AAPL': {
+      summary: "Apple delivered strong performance over the past 4 quarters with consistent revenue growth driven by iPhone 15 launch and services expansion. The company maintained healthy margins despite supply chain challenges and showed resilience in emerging markets.",
+      quarterlyData: [
+        { quarter: 'Q1 24', revenue: 119.6, eps: 2.18 },
+        { quarter: 'Q2 24', revenue: 90.8, eps: 1.53 },
+        { quarter: 'Q3 24', revenue: 85.8, eps: 1.40 },
+        { quarter: 'Q4 24', revenue: 94.9, eps: 1.64 }
+      ]
+    },
+    'MSFT': {
+      summary: "Microsoft showed exceptional growth in cloud services and AI integration across quarters. Azure revenue accelerated significantly while productivity tools benefited from enterprise digital transformation trends and AI-powered features.",
+      quarterlyData: [
+        { quarter: 'Q1 24', revenue: 62.0, eps: 2.99 },
+        { quarter: 'Q2 24', revenue: 64.7, eps: 3.20 },
+        { quarter: 'Q3 24', revenue: 61.9, eps: 2.94 },
+        { quarter: 'Q4 24', revenue: 65.6, eps: 3.31 }
+      ]
+    },
+    'GOOGL': {
+      summary: "Alphabet demonstrated strong fundamentals with search advertising resilience and significant progress in AI capabilities. Cloud division showed accelerating growth while YouTube maintained solid performance despite competitive pressures.",
+      quarterlyData: [
+        { quarter: 'Q1 24', revenue: 80.5, eps: 1.89 },
+        { quarter: 'Q2 24', revenue: 84.7, eps: 1.95 },
+        { quarter: 'Q3 24', revenue: 88.3, eps: 2.12 },
+        { quarter: 'Q4 24', revenue: 86.3, eps: 2.07 }
+      ]
+    },
+    'TSLA': {
+      summary: "Tesla navigated challenging market conditions with strategic pricing adjustments and production optimization. Energy business showed promising growth while autonomous driving capabilities continued advancing despite regulatory headwinds.",
+      quarterlyData: [
+        { quarter: 'Q1 24', revenue: 21.3, eps: 0.45 },
+        { quarter: 'Q2 24', revenue: 25.0, eps: 0.52 },
+        { quarter: 'Q3 24', revenue: 25.2, eps: 0.72 },
+        { quarter: 'Q4 24', revenue: 25.2, eps: 0.71 }
+      ]
+    },
+    'NVDA': {
+      summary: "NVIDIA delivered exceptional performance driven by AI and data center demand surge. Gaming segment stabilized while professional visualization and automotive showed steady progress. Supply chain optimization improved margins significantly.",
+      quarterlyData: [
+        { quarter: 'Q1 24', revenue: 18.4, eps: 5.16 },
+        { quarter: 'Q2 24', revenue: 30.0, eps: 10.11 },
+        { quarter: 'Q3 24', revenue: 35.1, eps: 12.96 },
+        { quarter: 'Q4 24', revenue: 22.1, eps: 5.98 }
+      ]
+    }
+  };
+
+  return overviews[symbol] || {
+    summary: `${symbol} has shown mixed performance over the past 4 quarters with varying revenue trends and earnings volatility. The company continues to adapt to market conditions while focusing on operational efficiency and strategic growth initiatives.`,
+    quarterlyData: [
+      { quarter: 'Q1 24', revenue: Math.random() * 50 + 10, eps: Math.random() * 3 + 0.5 },
+      { quarter: 'Q2 24', revenue: Math.random() * 50 + 10, eps: Math.random() * 3 + 0.5 },
+      { quarter: 'Q3 24', revenue: Math.random() * 50 + 10, eps: Math.random() * 3 + 0.5 },
+      { quarter: 'Q4 24', revenue: Math.random() * 50 + 10, eps: Math.random() * 3 + 0.5 }
+    ]
+  };
 };
 
 const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfolioProps) => {
@@ -242,24 +305,79 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
 
               return (
                 <tr key={stock.symbol} className="border-t border-secondary">
-                  <td className="py-4">
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={`https://logo.clearbit.com/${getCompanyDomain(stock.symbol)}`}
-                        alt={`${stock.symbol} logo`}
-                        className="w-8 h-8 rounded-full bg-secondary/20 object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = `https://via.placeholder.com/32/8989DE/FFFFFF?text=${stock.symbol.charAt(0)}`;
-                        }}
-                      />
-                      <div>
-                        <p className="font-medium">{stock.symbol}</p>
-                        <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                          {stock.name}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
+                   <td className="py-4">
+                     <div className="flex items-center gap-3">
+                       <HoverCard>
+                         <HoverCardTrigger asChild>
+                           <img 
+                             src={`https://logo.clearbit.com/${getCompanyDomain(stock.symbol)}`}
+                             alt={`${stock.symbol} logo`}
+                             className="w-8 h-8 rounded-full bg-secondary/20 object-cover cursor-pointer hover:scale-105 transition-transform"
+                             onError={(e) => {
+                               e.currentTarget.src = `https://via.placeholder.com/32/8989DE/FFFFFF?text=${stock.symbol.charAt(0)}`;
+                             }}
+                           />
+                         </HoverCardTrigger>
+                         <HoverCardContent className="w-96" side="right">
+                           {(() => {
+                             const overview = getCompanyOverview(stock.symbol);
+                             return (
+                               <div className="space-y-4">
+                                 <div>
+                                   <h4 className="font-semibold text-sm mb-2">{stock.symbol} - Quarterly Performance</h4>
+                                   <p className="text-xs text-muted-foreground leading-relaxed">
+                                     {overview.summary}
+                                   </p>
+                                 </div>
+                                 <div className="space-y-2">
+                                   <h5 className="text-xs font-medium">Revenue Trend (Billions)</h5>
+                                   <div className="h-20">
+                                     <ResponsiveContainer width="100%" height="100%">
+                                       <LineChart data={overview.quarterlyData}>
+                                         <XAxis 
+                                           dataKey="quarter" 
+                                           tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                                           axisLine={false}
+                                           tickLine={false}
+                                         />
+                                         <YAxis hide />
+                                         <Line 
+                                           type="monotone" 
+                                           dataKey="revenue" 
+                                           stroke="hsl(var(--primary))"
+                                           strokeWidth={2}
+                                           dot={{ fill: 'hsl(var(--primary))', strokeWidth: 0, r: 3 }}
+                                         />
+                                       </LineChart>
+                                     </ResponsiveContainer>
+                                   </div>
+                                 </div>
+                                 <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border">
+                                   {overview.quarterlyData.map((quarter) => (
+                                     <div key={quarter.quarter} className="text-center">
+                                       <div className="text-xs font-medium">{quarter.quarter}</div>
+                                       <div className="text-xs text-muted-foreground">
+                                         ${quarter.revenue}B
+                                       </div>
+                                       <div className="text-xs text-muted-foreground">
+                                         EPS: ${quarter.eps}
+                                       </div>
+                                     </div>
+                                   ))}
+                                 </div>
+                               </div>
+                             );
+                           })()}
+                         </HoverCardContent>
+                       </HoverCard>
+                       <div>
+                         <p className="font-medium">{stock.symbol}</p>
+                         <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                           {stock.name}
+                         </p>
+                       </div>
+                     </div>
+                   </td>
                   <td className="py-4 font-medium">
                     ${currentPrice.toFixed(2)}
                   </td>
