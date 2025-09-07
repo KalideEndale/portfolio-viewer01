@@ -87,7 +87,7 @@ interface StockPortfolioProps {
 }
 
 // Helper function to get change percentage for different time frames
-const getChangeForTimeFrame = (dailyChange: number, timeFrame: 'd' | 'w' | 'm' | 'y'): number => {
+const getChangeForTimeFrame = (dailyChange: number, timeFrame: 'd' | 'w' | 'm' | 'y' | 'all'): number => {
   switch (timeFrame) {
     case 'd':
       return dailyChange;
@@ -97,6 +97,8 @@ const getChangeForTimeFrame = (dailyChange: number, timeFrame: 'd' | 'w' | 'm' |
       return dailyChange * 2.1; // Mock monthly multiplier
     case 'y':
       return dailyChange * 8.5; // Mock yearly multiplier
+    case 'all':
+      return dailyChange * 15.2; // Mock all-time multiplier
     default:
       return dailyChange;
   }
@@ -164,7 +166,7 @@ const getCompanyOverview = (symbol: string) => {
 };
 
 const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfolioProps) => {
-  const [globalChangeTimeFrame, setGlobalChangeTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
+  const [globalChangeTimeFrame, setGlobalChangeTimeFrame] = useState<'d' | 'w' | 'm' | 'y' | 'all'>('d');
   const [sortBy, setSortBy] = useState<'position' | 'pnl' | 'portfolio' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { isPrivacyMode } = usePrivacy();
@@ -287,6 +289,9 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setGlobalChangeTimeFrame('y')} className={globalChangeTimeFrame === 'y' ? 'bg-secondary' : ''}>
                       Year
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setGlobalChangeTimeFrame('all')} className={globalChangeTimeFrame === 'all' ? 'bg-secondary' : ''}>
+                      All
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import CompareDialog from "./CompareDialog";
 
 // Generate mock portfolio performance data
 const generatePortfolioData = () => {
@@ -38,7 +39,7 @@ const fetchPortfolioPerformance = async () => {
 };
 
 const PortfolioCard = () => {
-  const [timeFrame, setTimeFrame] = useState<'d' | 'w' | 'm' | 'y'>('d');
+  const [timeFrame, setTimeFrame] = useState<'d' | 'w' | 'm' | 'y' | 'all'>('d');
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   
@@ -60,6 +61,7 @@ const PortfolioCard = () => {
       case 'w': return portfolioData[Math.max(0, portfolioData.length - 7)]?.value || 280000;
       case 'm': return portfolioData[0]?.value || 275000;
       case 'y': return 250000; // Mock yearly starting value
+      case 'all': return 180000; // Mock all-time starting value
       default: return portfolioData[portfolioData.length - 2]?.value || 285000;
     }
   };
@@ -74,6 +76,7 @@ const PortfolioCard = () => {
       case 'w': return 'Weekly P&L';
       case 'm': return 'Monthly P&L';
       case 'y': return 'Yearly P&L';
+      case 'all': return 'All-Time P&L';
       default: return 'Daily P&L';
     }
   };
@@ -112,9 +115,12 @@ const PortfolioCard = () => {
             <DollarSignIcon className="w-3 h-3 text-primary" />
             <span className="text-xs text-muted-foreground">Total Value</span>
           </div>
-          <p className="text-lg font-semibold">
-            {formatPrivateValue(currentValue, isPrivacyMode)}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-lg font-semibold">
+              {formatPrivateValue(currentValue, isPrivacyMode)}
+            </p>
+            <CompareDialog currentTimeFrame={timeFrame} portfolioReturn={changePercent} />
+          </div>
         </div>
         <div className="bg-secondary/20 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-1">
@@ -128,7 +134,7 @@ const PortfolioCard = () => {
               </PopoverTrigger>
               <PopoverContent className="w-auto p-1 bg-card border border-border shadow-lg" align="end">
                 <div className="flex flex-col gap-1">
-                  {(['d', 'w', 'm', 'y'] as const).map((period) => (
+                  {(['d', 'w', 'm', 'y', 'all'] as const).map((period) => (
                     <button
                       key={period}
                       onClick={() => {
@@ -141,7 +147,7 @@ const PortfolioCard = () => {
                           : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {period === 'd' ? 'Day' : period === 'w' ? 'Week' : period === 'm' ? 'Month' : 'Year'}
+                      {period === 'd' ? 'Day' : period === 'w' ? 'Week' : period === 'm' ? 'Month' : period === 'y' ? 'Year' : 'All'}
                     </button>
                   ))}
                 </div>
