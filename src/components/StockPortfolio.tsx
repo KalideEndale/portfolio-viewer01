@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { usePrivacy, formatPrivateValue } from "@/contexts/PrivacyContext";
 import PortfolioManager from "./PortfolioManager";
 import AveragePriceCalculator from "./AveragePriceCalculator";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 // Helper function to get company domain for logo fetching
 const getCompanyDomain = (symbol: string): string => {
@@ -104,50 +104,50 @@ const getChangeForTimeFrame = (dailyChange: number, timeFrame: 'd' | 'w' | 'm' |
 
 // Mock AI-generated quarterly overviews and performance data
 const getCompanyOverview = (symbol: string) => {
-  const overviews: Record<string, { summary: string; quarterlyData: { quarter: string; revenue: number; eps: number; }[] }> = {
+  const overviews: Record<string, { summary: string; quarterlyData: { quarter: string; actualRevenue: number; estimatedRevenue: number; actualEps: number; estimatedEps: number; }[] }> = {
     'AAPL': {
       summary: "Apple delivered strong performance over the past 4 quarters with consistent revenue growth driven by iPhone 15 launch and services expansion. The company maintained healthy margins despite supply chain challenges and showed resilience in emerging markets.",
       quarterlyData: [
-        { quarter: 'Q1 24', revenue: 119.6, eps: 2.18 },
-        { quarter: 'Q2 24', revenue: 90.8, eps: 1.53 },
-        { quarter: 'Q3 24', revenue: 85.8, eps: 1.40 },
-        { quarter: 'Q4 24', revenue: 94.9, eps: 1.64 }
+        { quarter: 'Q1 24', actualRevenue: 119.6, estimatedRevenue: 117.9, actualEps: 2.18, estimatedEps: 2.10 },
+        { quarter: 'Q2 24', actualRevenue: 90.8, estimatedRevenue: 90.3, actualEps: 1.53, estimatedEps: 1.50 },
+        { quarter: 'Q3 24', actualRevenue: 85.8, estimatedRevenue: 85.0, actualEps: 1.40, estimatedEps: 1.39 },
+        { quarter: 'Q4 24', actualRevenue: 94.9, estimatedRevenue: 93.2, actualEps: 1.64, estimatedEps: 1.60 }
       ]
     },
     'MSFT': {
       summary: "Microsoft showed exceptional growth in cloud services and AI integration across quarters. Azure revenue accelerated significantly while productivity tools benefited from enterprise digital transformation trends and AI-powered features.",
       quarterlyData: [
-        { quarter: 'Q1 24', revenue: 62.0, eps: 2.99 },
-        { quarter: 'Q2 24', revenue: 64.7, eps: 3.20 },
-        { quarter: 'Q3 24', revenue: 61.9, eps: 2.94 },
-        { quarter: 'Q4 24', revenue: 65.6, eps: 3.31 }
+        { quarter: 'Q1 24', actualRevenue: 62.0, estimatedRevenue: 61.1, actualEps: 2.99, estimatedEps: 2.65 },
+        { quarter: 'Q2 24', actualRevenue: 64.7, estimatedRevenue: 64.2, actualEps: 3.20, estimatedEps: 2.78 },
+        { quarter: 'Q3 24', actualRevenue: 61.9, estimatedRevenue: 60.8, actualEps: 2.94, estimatedEps: 2.85 },
+        { quarter: 'Q4 24', actualRevenue: 65.6, estimatedRevenue: 64.5, actualEps: 3.31, estimatedEps: 2.93 }
       ]
     },
     'GOOGL': {
       summary: "Alphabet demonstrated strong fundamentals with search advertising resilience and significant progress in AI capabilities. Cloud division showed accelerating growth while YouTube maintained solid performance despite competitive pressures.",
       quarterlyData: [
-        { quarter: 'Q1 24', revenue: 80.5, eps: 1.89 },
-        { quarter: 'Q2 24', revenue: 84.7, eps: 1.95 },
-        { quarter: 'Q3 24', revenue: 88.3, eps: 2.12 },
-        { quarter: 'Q4 24', revenue: 86.3, eps: 2.07 }
+        { quarter: 'Q1 24', actualRevenue: 80.5, estimatedRevenue: 78.9, actualEps: 1.89, estimatedEps: 1.51 },
+        { quarter: 'Q2 24', actualRevenue: 84.7, estimatedRevenue: 82.8, actualEps: 1.95, estimatedEps: 1.84 },
+        { quarter: 'Q3 24', actualRevenue: 88.3, estimatedRevenue: 86.4, actualEps: 2.12, estimatedEps: 1.85 },
+        { quarter: 'Q4 24', actualRevenue: 86.3, estimatedRevenue: 85.2, actualEps: 2.07, estimatedEps: 1.83 }
       ]
     },
     'TSLA': {
       summary: "Tesla navigated challenging market conditions with strategic pricing adjustments and production optimization. Energy business showed promising growth while autonomous driving capabilities continued advancing despite regulatory headwinds.",
       quarterlyData: [
-        { quarter: 'Q1 24', revenue: 21.3, eps: 0.45 },
-        { quarter: 'Q2 24', revenue: 25.0, eps: 0.52 },
-        { quarter: 'Q3 24', revenue: 25.2, eps: 0.72 },
-        { quarter: 'Q4 24', revenue: 25.2, eps: 0.71 }
+        { quarter: 'Q1 24', actualRevenue: 21.3, estimatedRevenue: 22.4, actualEps: 0.45, estimatedEps: 0.51 },
+        { quarter: 'Q2 24', actualRevenue: 25.0, estimatedRevenue: 24.7, actualEps: 0.52, estimatedEps: 0.62 },
+        { quarter: 'Q3 24', actualRevenue: 25.2, estimatedRevenue: 25.4, actualEps: 0.72, estimatedEps: 0.60 },
+        { quarter: 'Q4 24', actualRevenue: 25.2, estimatedRevenue: 25.8, actualEps: 0.71, estimatedEps: 0.73 }
       ]
     },
     'NVDA': {
       summary: "NVIDIA delivered exceptional performance driven by AI and data center demand surge. Gaming segment stabilized while professional visualization and automotive showed steady progress. Supply chain optimization improved margins significantly.",
       quarterlyData: [
-        { quarter: 'Q1 24', revenue: 18.4, eps: 5.16 },
-        { quarter: 'Q2 24', revenue: 30.0, eps: 10.11 },
-        { quarter: 'Q3 24', revenue: 35.1, eps: 12.96 },
-        { quarter: 'Q4 24', revenue: 22.1, eps: 5.98 }
+        { quarter: 'Q1 24', actualRevenue: 18.4, estimatedRevenue: 16.2, actualEps: 5.16, estimatedEps: 4.08 },
+        { quarter: 'Q2 24', actualRevenue: 30.0, estimatedRevenue: 28.7, actualEps: 10.11, estimatedEps: 8.65 },
+        { quarter: 'Q3 24', actualRevenue: 35.1, estimatedRevenue: 32.5, actualEps: 12.96, estimatedEps: 10.32 },
+        { quarter: 'Q4 24', actualRevenue: 22.1, estimatedRevenue: 20.4, actualEps: 5.98, estimatedEps: 5.28 }
       ]
     }
   };
@@ -155,10 +155,10 @@ const getCompanyOverview = (symbol: string) => {
   return overviews[symbol] || {
     summary: `${symbol} has shown mixed performance over the past 4 quarters with varying revenue trends and earnings volatility. The company continues to adapt to market conditions while focusing on operational efficiency and strategic growth initiatives.`,
     quarterlyData: [
-      { quarter: 'Q1 24', revenue: Math.random() * 50 + 10, eps: Math.random() * 3 + 0.5 },
-      { quarter: 'Q2 24', revenue: Math.random() * 50 + 10, eps: Math.random() * 3 + 0.5 },
-      { quarter: 'Q3 24', revenue: Math.random() * 50 + 10, eps: Math.random() * 3 + 0.5 },
-      { quarter: 'Q4 24', revenue: Math.random() * 50 + 10, eps: Math.random() * 3 + 0.5 }
+      { quarter: 'Q1 24', actualRevenue: Math.random() * 50 + 10, estimatedRevenue: Math.random() * 50 + 10, actualEps: Math.random() * 3 + 0.5, estimatedEps: Math.random() * 3 + 0.5 },
+      { quarter: 'Q2 24', actualRevenue: Math.random() * 50 + 10, estimatedRevenue: Math.random() * 50 + 10, actualEps: Math.random() * 3 + 0.5, estimatedEps: Math.random() * 3 + 0.5 },
+      { quarter: 'Q3 24', actualRevenue: Math.random() * 50 + 10, estimatedRevenue: Math.random() * 50 + 10, actualEps: Math.random() * 3 + 0.5, estimatedEps: Math.random() * 3 + 0.5 },
+      { quarter: 'Q4 24', actualRevenue: Math.random() * 50 + 10, estimatedRevenue: Math.random() * 50 + 10, actualEps: Math.random() * 3 + 0.5, estimatedEps: Math.random() * 3 + 0.5 }
     ]
   };
 };
@@ -318,57 +318,136 @@ const StockPortfolio = ({ stocks: portfolioStocks, onUpdateStocks }: StockPortfo
                              }}
                            />
                          </HoverCardTrigger>
-                         <HoverCardContent className="w-96" side="right">
-                           {(() => {
-                             const overview = getCompanyOverview(stock.symbol);
-                             return (
-                               <div className="space-y-4">
-                                 <div>
-                                   <h4 className="font-semibold text-sm mb-2">{stock.symbol} - Quarterly Performance</h4>
-                                   <p className="text-xs text-muted-foreground leading-relaxed">
-                                     {overview.summary}
-                                   </p>
-                                 </div>
-                                 <div className="space-y-2">
-                                   <h5 className="text-xs font-medium">Revenue Trend (Billions)</h5>
-                                   <div className="h-20">
-                                     <ResponsiveContainer width="100%" height="100%">
-                                       <LineChart data={overview.quarterlyData}>
-                                         <XAxis 
-                                           dataKey="quarter" 
-                                           tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                                           axisLine={false}
-                                           tickLine={false}
-                                         />
-                                         <YAxis hide />
-                                         <Line 
-                                           type="monotone" 
-                                           dataKey="revenue" 
-                                           stroke="hsl(var(--primary))"
-                                           strokeWidth={2}
-                                           dot={{ fill: 'hsl(var(--primary))', strokeWidth: 0, r: 3 }}
-                                         />
-                                       </LineChart>
-                                     </ResponsiveContainer>
-                                   </div>
-                                 </div>
-                                 <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border">
-                                   {overview.quarterlyData.map((quarter) => (
-                                     <div key={quarter.quarter} className="text-center">
-                                       <div className="text-xs font-medium">{quarter.quarter}</div>
-                                       <div className="text-xs text-muted-foreground">
-                                         ${quarter.revenue}B
-                                       </div>
-                                       <div className="text-xs text-muted-foreground">
-                                         EPS: ${quarter.eps}
-                                       </div>
-                                     </div>
-                                   ))}
-                                 </div>
-                               </div>
-                             );
-                           })()}
-                         </HoverCardContent>
+                          <HoverCardContent className="w-96" side="right">
+                            {(() => {
+                              const overview = getCompanyOverview(stock.symbol);
+                              return (
+                                <div className="space-y-4">
+                                  <div>
+                                    <h4 className="font-semibold text-sm mb-2">{stock.symbol} - Quarterly Performance</h4>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                      {overview.summary}
+                                    </p>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <h5 className="text-xs font-medium">Revenue: Actual vs Estimated (Billions)</h5>
+                                    <div className="h-24">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={overview.quarterlyData}>
+                                          <XAxis 
+                                            dataKey="quarter" 
+                                            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                          />
+                                          <YAxis hide />
+                                          <Tooltip 
+                                            content={({ active, payload, label }) => {
+                                              if (active && payload && payload.length) {
+                                                return (
+                                                  <div className="bg-card border border-border rounded p-2 shadow-lg">
+                                                    <p className="text-xs font-medium">{label}</p>
+                                                    {payload.map((entry, index) => (
+                                                      <p key={index} className="text-xs" style={{ color: entry.color }}>
+                                                        {entry.name}: ${typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}B
+                                                      </p>
+                                                    ))}
+                                                  </div>
+                                                );
+                                              }
+                                              return null;
+                                            }}
+                                          />
+                                          <Line 
+                                            type="monotone" 
+                                            dataKey="actualRevenue" 
+                                            name="Actual"
+                                            stroke="hsl(var(--primary))"
+                                            strokeWidth={2}
+                                            dot={{ fill: 'hsl(var(--primary))', strokeWidth: 0, r: 3 }}
+                                          />
+                                          <Line 
+                                            type="monotone" 
+                                            dataKey="estimatedRevenue" 
+                                            name="Estimated"
+                                            stroke="hsl(var(--muted-foreground))"
+                                            strokeWidth={2}
+                                            strokeDasharray="3 3"
+                                            dot={{ fill: 'hsl(var(--muted-foreground))', strokeWidth: 0, r: 3 }}
+                                          />
+                                        </LineChart>
+                                      </ResponsiveContainer>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <h5 className="text-xs font-medium">EPS: Actual vs Estimated ($)</h5>
+                                    <div className="h-24">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={overview.quarterlyData}>
+                                          <XAxis 
+                                            dataKey="quarter" 
+                                            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                          />
+                                          <YAxis hide />
+                                          <Tooltip 
+                                            content={({ active, payload, label }) => {
+                                              if (active && payload && payload.length) {
+                                                return (
+                                                  <div className="bg-card border border-border rounded p-2 shadow-lg">
+                                                    <p className="text-xs font-medium">{label}</p>
+                                                    {payload.map((entry, index) => (
+                                                      <p key={index} className="text-xs" style={{ color: entry.color }}>
+                                                        {entry.name}: ${typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}
+                                                      </p>
+                                                    ))}
+                                                  </div>
+                                                );
+                                              }
+                                              return null;
+                                            }}
+                                          />
+                                          <Line 
+                                            type="monotone" 
+                                            dataKey="actualEps" 
+                                            name="Actual"
+                                            stroke="hsl(var(--primary))"
+                                            strokeWidth={2}
+                                            dot={{ fill: 'hsl(var(--primary))', strokeWidth: 0, r: 3 }}
+                                          />
+                                          <Line 
+                                            type="monotone" 
+                                            dataKey="estimatedEps" 
+                                            name="Estimated"
+                                            stroke="hsl(var(--muted-foreground))"
+                                            strokeWidth={2}
+                                            strokeDasharray="3 3"
+                                            dot={{ fill: 'hsl(var(--muted-foreground))', strokeWidth: 0, r: 3 }}
+                                          />
+                                        </LineChart>
+                                      </ResponsiveContainer>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-4 gap-1 pt-2 border-t border-border text-xs">
+                                    {overview.quarterlyData.map((quarter) => (
+                                      <div key={quarter.quarter} className="text-center space-y-1">
+                                        <div className="font-medium text-xs">{quarter.quarter}</div>
+                                        <div className="space-y-0.5">
+                                          <div className="text-xs text-muted-foreground">
+                                            Rev: ${quarter.actualRevenue.toFixed(1)}B
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">
+                                            EPS: ${quarter.actualEps.toFixed(2)}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </HoverCardContent>
                        </HoverCard>
                        <div>
                          <p className="font-medium">{stock.symbol}</p>
