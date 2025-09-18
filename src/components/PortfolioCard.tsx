@@ -113,6 +113,7 @@ const PortfolioCard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<{start: number, end: number} | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   
   const { data: portfolioData, isLoading } = useQuery({
@@ -137,6 +138,20 @@ const PortfolioCard = () => {
   const initialValue = portfolioData?.[0]?.value || 275000;
   const change = currentValue - initialValue;
   const changePercent = (change / initialValue) * 100;
+  
+  // Get display data based on hover or current
+  const displayIndex = hoverIndex !== null ? hoverIndex : (portfolioData?.length - 1 || 0);
+  const displayData = portfolioData?.[displayIndex];
+  const displayValue = displayData?.value || currentValue;
+  const displayChange = displayValue - initialValue;
+  const displayChangePercent = (displayChange / initialValue) * 100;
+  
+  // Get comparison display data
+  const comparisonDisplayValue = comparisonData?.[displayIndex]?.benchmarkValue ? 
+    (comparisonData[displayIndex].benchmarkValue / 100 * initialValue) : null;
+  const comparisonDisplayChange = comparisonDisplayValue ? comparisonDisplayValue - initialValue : null;
+  const comparisonDisplayChangePercent = comparisonDisplayChange && initialValue ? 
+    (comparisonDisplayChange / initialValue) * 100 : null;
   
   // Calculate selected period stats
   const selectedPeriodStats = selectedPeriod && portfolioData ? (() => {
@@ -326,11 +341,18 @@ const PortfolioCard = () => {
               }
             }}
             onMouseMove={(e) => {
-              if (isSelecting && e && e.activeTooltipIndex !== undefined && selectionStart !== null) {
-                const start = Math.min(selectionStart, e.activeTooltipIndex);
-                const end = Math.max(selectionStart, e.activeTooltipIndex);
-                setSelectedPeriod({ start, end });
+              if (e && e.activeTooltipIndex !== undefined) {
+                setHoverIndex(e.activeTooltipIndex);
+                
+                if (isSelecting && selectionStart !== null) {
+                  const start = Math.min(selectionStart, e.activeTooltipIndex);
+                  const end = Math.max(selectionStart, e.activeTooltipIndex);
+                  setSelectedPeriod({ start, end });
+                }
               }
+            }}
+            onMouseLeave={() => {
+              setHoverIndex(null);
             }}
             onMouseUp={() => {
               setIsSelecting(false);
@@ -369,7 +391,8 @@ const PortfolioCard = () => {
                 fill="hsl(var(--primary))"
                 fillOpacity={0.1}
                 stroke="hsl(var(--primary))"
-                strokeOpacity={0.3}
+                strokeOpacity={0.5}
+                strokeDasharray="4 2"
               />
             )}
             <Line 
@@ -392,6 +415,70 @@ const PortfolioCard = () => {
             )}
           </LineChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Comparison Display Area - Google Finance Style */}
+      <div className="mt-6 space-y-2">
+        {/* Portfolio Display */}
+        <div className="flex items-center justify-between bg-secondary/10 rounded-lg p-3">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-primary"></div>
+            <span className="font-medium">Your Portfolio</span>
+          </div>
+          <div className="flex items-center gap-6 text-right">
+            <div>
+              <div className="font-semibold">
+                {formatPrivateValue(displayValue, isPrivacyMode)}
+              </div>
+            </div>
+            <div>
+              <div className={`font-semibold ${displayChange >= 0 ? 'text-success' : 'text-warning'}`}>
+                {isPrivacyMode ? '••••' : `${displayChange >= 0 ? '+' : ''}$${displayChange.toFixed(0)}`}
+              </div>
+            </div>
+            <div>
+              <div className={`font-semibold ${displayChangePercent >= 0 ? 'text-success' : 'text-warning'}`}>
+                {isPrivacyMode ? '••••' : `${displayChangePercent >= 0 ? '+' : ''}${displayChangePercent.toFixed(2)}%`}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Comparison Display */}
+        {comparisonSymbol && comparisonDisplayValue && (
+          <div className="flex items-center justify-between bg-secondary/10 rounded-lg p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-muted-foreground opacity-60"></div>
+              <span className="font-medium">{comparisonSymbol}</span>
+              <span className="text-xs text-muted-foreground">({comparisonName})</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={removeComparison}
+                className="h-5 w-5 p-0 ml-2"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-6 text-right">
+              <div>
+                <div className="font-semibold">
+                  ${comparisonDisplayValue.toLocaleString()}
+                </div>
+              </div>
+              <div>
+                <div className={`font-semibold ${(comparisonDisplayChange || 0) >= 0 ? 'text-success' : 'text-warning'}`}>
+                  {comparisonDisplayChange ? `${comparisonDisplayChange >= 0 ? '+' : ''}$${comparisonDisplayChange.toFixed(0)}` : '--'}
+                </div>
+              </div>
+              <div>
+                <div className={`font-semibold ${(comparisonDisplayChangePercent || 0) >= 0 ? 'text-success' : 'text-warning'}`}>
+                  {comparisonDisplayChangePercent ? `${comparisonDisplayChangePercent >= 0 ? '+' : ''}${comparisonDisplayChangePercent.toFixed(2)}%` : '--'}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
