@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceArea, Brush } from "recharts";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceArea } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { TrendingUpIcon, DollarSignIcon, BarChart3Icon, EyeIcon, EyeOffIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -111,6 +111,8 @@ const PortfolioCard = () => {
   const [comparisonSymbol, setComparisonSymbol] = useState<string | null>(null);
   const [comparisonName, setComparisonName] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<{start: number, end: number} | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<number | null>(null);
   const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
   
   const { data: portfolioData, isLoading } = useQuery({
@@ -314,15 +316,25 @@ const PortfolioCard = () => {
       {/* Performance Chart */}
       <div className="w-full h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart 
+           <LineChart 
             data={chartData}
             onMouseDown={(e) => {
-              if (e && e.activeLabel !== undefined) {
-                const index = chartData.findIndex(item => item.date === e.activeLabel);
-                if (index !== -1) {
-                  setSelectedPeriod({ start: index, end: index });
-                }
+              if (e && e.activeTooltipIndex !== undefined) {
+                setIsSelecting(true);
+                setSelectionStart(e.activeTooltipIndex);
+                setSelectedPeriod({ start: e.activeTooltipIndex, end: e.activeTooltipIndex });
               }
+            }}
+            onMouseMove={(e) => {
+              if (isSelecting && e && e.activeTooltipIndex !== undefined && selectionStart !== null) {
+                const start = Math.min(selectionStart, e.activeTooltipIndex);
+                const end = Math.max(selectionStart, e.activeTooltipIndex);
+                setSelectedPeriod({ start, end });
+              }
+            }}
+            onMouseUp={() => {
+              setIsSelecting(false);
+              setSelectionStart(null);
             }}
           >
             <XAxis 
@@ -350,6 +362,16 @@ const PortfolioCard = () => {
                 name === 'value' ? 'Portfolio' : comparisonSymbol || 'Benchmark'
               ]}
             />
+            {selectedPeriod && selectedPeriod.start !== selectedPeriod.end && (
+              <ReferenceArea
+                x1={chartData[selectedPeriod.start]?.date}
+                x2={chartData[selectedPeriod.end]?.date}
+                fill="hsl(var(--primary))"
+                fillOpacity={0.1}
+                stroke="hsl(var(--primary))"
+                strokeOpacity={0.3}
+              />
+            )}
             <Line 
               type="monotone" 
               dataKey="value" 
@@ -368,17 +390,6 @@ const PortfolioCard = () => {
                 dot={false}
               />
             )}
-            <Brush
-              dataKey="date"
-              height={20}
-              stroke="hsl(var(--primary))"
-              fill="hsl(var(--primary)/0.1)"
-              onChange={(range) => {
-                if (range && range.startIndex !== undefined && range.endIndex !== undefined) {
-                  setSelectedPeriod({ start: range.startIndex, end: range.endIndex });
-                }
-              }}
-            />
           </LineChart>
         </ResponsiveContainer>
       </div>
